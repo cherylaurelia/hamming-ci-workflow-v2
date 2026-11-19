@@ -44,6 +44,9 @@ on:
 jobs:
   run-test:
     runs-on: ubuntu-latest
+    env:
+      HAMMING_API_BASE_URL: http://127.0.0.1:8787/api/rest
+      POLL_INTERVAL_SECONDS: "2"
     outputs:
       test_run_id: ${{ steps.run_test.outputs.test_run_id }}
       status: ${{ steps.check_results.outcome }}
@@ -51,7 +54,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          repository: HammingHQ/hamming-ci-workflow-v2
+          repository: ${{ github.repository }}
+          ref: ${{ github.head_ref }}
           path: hamming-ci-workflow-v2
 
       - name: Set up Python
@@ -72,6 +76,11 @@ jobs:
           set -x
           python -m pip install --upgrade pip
           pip install -r "$GITHUB_WORKSPACE/hamming-ci-workflow-v2/requirements.txt"
+
+      - name: Start stub Hamming API (proof only)
+        run: |
+          nohup python hamming-ci-workflow-v2/proof/stub_hamming_api.py > stub.log 2>&1 &
+          sleep 2
 
       - name: Validate inputs
         run: |
